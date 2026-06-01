@@ -14,7 +14,7 @@ add_library(injector SHARED
         itemicon.cpp
         walker.cpp
         debug.cpp
-)
+ )
 
 target_precompile_headers(injector PRIVATE pch.h)
 
@@ -39,7 +39,7 @@ add_executable(launcher WIN32
         launcher.rc
         launcher.cpp
         debug.cpp
-)
+ )
 
 set_target_properties(launcher PROPERTIES
         OUTPUT_NAME "Kinoko"

@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "hook.h"
 #include "debug.h"
+#include "hook.h"
 #include <detours.h>
 #include <psapi.h>
 
@@ -148,6 +148,17 @@ void PatchStr(uintptr_t pAddress, const char* sValue) {
 void PatchJmp(uintptr_t pAddress, uintptr_t pDestination) {
     Patch1(pAddress, 0xE9);
     Patch4(pAddress + 1, pDestination - pAddress - 5);
+}
+
+void PatchJmp(uintptr_t pAddress, uintptr_t pDestination, size_t uSize) {
+    if (uSize < 5) {
+        // 处理错误：改用短跳转（JMP rel8）或其它方案
+        return;
+    }
+    PatchJmp(pAddress, pDestination);
+    if (uSize > 5) {
+        PatchNop(pAddress + 5, pAddress + uSize);
+    }
 }
 
 void PatchNop(uintptr_t pAddress, uintptr_t pDestination) {

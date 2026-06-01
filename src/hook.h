@@ -44,6 +44,7 @@ void AttachSystemOptionMod();
 void AttachTemporaryStatMod();
 void AttachElementalDamageMod();
 void AttachIconIconMod();
+void AttachQuickSlot();
 void AttachExceptionHandler();
 
 inline void AttachClientHooks() {
@@ -54,6 +55,7 @@ inline void AttachClientHooks() {
     AttachTemporaryStatMod();
     AttachElementalDamageMod();
     AttachIconIconMod();
+    //AttachQuickSlot();
     AttachExceptionHandler();
 }
 
@@ -83,6 +85,8 @@ void Patch4(uintptr_t pAddress, uint32_t uValue);
 void PatchStr(uintptr_t uAddress, const char* sValue);
 
 void PatchJmp(uintptr_t pAddress, uintptr_t pDestination);
+
+void PatchJmp(uintptr_t pAddress, uintptr_t pDestination, size_t uSize);
 
 void PatchNop(uintptr_t pAddress, uintptr_t pDestination);
 

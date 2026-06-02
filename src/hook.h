@@ -48,13 +48,13 @@ void AttachQuickSlot();
 void AttachExceptionHandler();
 
 inline void AttachClientHooks() {
-    AttachClientBypass();
-    AttachClientHelper();
+    AttachClientBypass();                // 重构CWvsApp，负责构建
+    AttachClientHelper();                // 显示各种ID
     AttachClientInlink();
-    AttachSystemOptionMod();
+    AttachSystemOptionMod();            // 系统配置多分辨率
     AttachTemporaryStatMod();
     AttachElementalDamageMod();
-    AttachIconIconMod();
+    AttachIconIconMod();                // 更新宠物在物品栏的icon
     //AttachQuickSlot();
     AttachExceptionHandler();
 }

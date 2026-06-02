@@ -122,7 +122,7 @@ static ULONG g_uNexonAddress;
 
 // 当游戏尝试连接网络时触发。它会用 InetNtopA 把网络地址转换成字符串（如 "211.x.x.x"）。
 // 具体改变：它检查连接的 IP 里是否包含官方的特征（CONFIG_NEXON_SEARCH）。如果包含，它会把官方 IP 擦掉，强行写入你自己的私服 IP（CONFIG_SERVER_ADDRESS）和端口（g_nServerPort）。
-//        同时，它用 g_uNexonAddress 变量悄悄记录下原本官方的 IP 地址。 
+// 同时，它用 g_uNexonAddress 变量悄悄记录下原本官方的 IP 地址。 
 int WINAPI WSPConnect_hook(SOCKET s, const struct sockaddr FAR* name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno) {
     char sName[INET_ADDRSTRLEN];
     InetNtopA(AF_INET, &((sockaddr_in*)name)->sin_addr, sName, INET_ADDRSTRLEN);
@@ -176,8 +176,8 @@ void AttachSystemHooks() {
     // hook 字符串
     ATTACH_HOOK(SetUnhandledExceptionFilter_orig, SetUnhandledExceptionFilter_hook);
 
-
     // 作用：实现客户端多开（解除单开限制）。
+    // 其他功能hook也在这里 
     ATTACH_HOOK(CreateMutexA_orig, CreateMutexA_hook);
 
     // 作用：接管游戏窗口创建、自定义窗口标题、实现窗口拖动/防卡死。

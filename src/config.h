@@ -11,5 +11,6 @@
 // #define CONFIG_IMAGE_LOADING
 // #define CONFIG_GLOBAL_FOCUS
 
+// 通过启动参数传入进行设置 extern
 extern char* g_sServerAddress;
 extern long g_nServerPort;

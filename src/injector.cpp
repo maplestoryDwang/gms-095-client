@@ -7,6 +7,7 @@ extern "C" __declspec(dllexport) VOID DummyExport() {}
 char* g_sServerAddress = nullptr;
 long g_nServerPort = 0;
 
+// 命令行中获取ip和端口号
 void ProcessCommandLine() {
     char sAddress[16];
     long nPort;
@@ -17,12 +18,13 @@ void ProcessCommandLine() {
     }
 }
 
+// dll注入的入口
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hinstDLL);
-        ProcessCommandLine();
-        AttachSystemHooks();
+        DisableThreadLibraryCalls(hinstDLL); // 优化性能，忽略线程创建通知
+        ProcessCommandLine();                // 1. 解析命令行
+        AttachSystemHooks();                 // 2. 挂钩（Hook）游戏函数
         break;
     case DLL_PROCESS_DETACH:
     case DLL_THREAD_ATTACH:

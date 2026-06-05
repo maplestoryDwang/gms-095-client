@@ -323,6 +323,8 @@ void __fastcall CWvsApp__Run_hook(CWvsApp* pThis, void* _EDX, int32_t* pbTermina
 static auto CClientSocket__Connect = 0x004B0340;
 
 // 作用：接管客戶端連接服務器的底層操作。
+// 把两个方法合并了
+
 void __fastcall CClientSocket__Connect_hook(CClientSocket* pThis, void* _EDX, CClientSocket::CONNECTCONTEXT* ctx) {
     DEBUG_MESSAGE("CClientSocket::Connect");
     pThis->m_ctxConnect.lAddr.RemoveAll();
@@ -331,6 +333,20 @@ void __fastcall CClientSocket__Connect_hook(CClientSocket* pThis, void* _EDX, CC
     pThis->m_ctxConnect.bLogin = ctx->bLogin;
     pThis->m_ctxConnect.posList = pThis->m_ctxConnect.lAddr.GetHeadPosition();
     auto next = ZList<ZInetAddr>::GetNext(pThis->m_ctxConnect.posList);
+
+
+
+   /*
+   * 中间跳过了一段：
+     if ( *(_DWORD *)CClientSocket::Connect != -2081649835
+    || *((_BYTE *)CClientSocket::Connect + 4) != 0xEC
+    || *(_DWORD *)((char *)CClientSocket::Connect + 6) > 0x89575653
+    || *((_BYTE *)CClientSocket::Connect + 10) != 77 )
+      {
+        CWvsApp::SetClearStackLog(TSingleton<CWvsApp>::ms_pInstance, 8u);
+      }
+      应该是校验是否正常链接的判断。
+   */
 
     DEBUG_MESSAGE("CClientSocket::Connect (addr)");
     // CClientSocket::ClearSendReceiveCtx(this);
@@ -358,12 +374,14 @@ static auto CClientSocket__OnAliveReq = 0x004AFC90;
 //作用：自動響應服務器的心跳包（Ping/KeepAlive）。
 void __fastcall CClientSocket__OnAliveReq_hook(CClientSocket* pThis, void* _EDX, CInPacket& iPacket) {
     COutPacket oPacket(25); // CP_AliveAck
+    // 发空包
     pThis->SendPacket(oPacket);
 }
 
 
 static auto CLogin__SendCheckPasswordPacket = 0x005DB9D0;
 // 作用：接管發送登錄賬號密碼的封包構造。
+// 目的是什么？ 难道是为了解决内存泄露？
 int32_t __fastcall CLogin__SendCheckPasswordPacket_hook(CLogin* pThis, void* _EDX, char* sID, char* sPasswd) {
     if (pThis->m_bRequestSent) {
         return 0;

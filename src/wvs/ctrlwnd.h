@@ -138,6 +138,7 @@ public:
     CCtrlComboBox() : CCtrlWnd(0) {
         reinterpret_cast<void(__thiscall*)(CCtrlComboBox*)>(0x004DA090)(this);
     }
+    // CCtrlComboBox::CreateCtrl
     virtual void CreateCtrl(CWnd* pParent, uint32_t nId, int32_t nType, int32_t l, int32_t t, int32_t w, int32_t h, void* pData) {
         reinterpret_cast<void(__thiscall*)(CCtrlComboBox*, CWnd*, uint32_t, int32_t, int32_t, int32_t, int32_t, int32_t, void*)>(0x004DA330)(this, pParent, nId, nType, l, t, w, h, pData);
     }

@@ -30,6 +30,7 @@ static int32_t g_bGlobalFocus;
 
 static auto CUISysOpt__OnCreate = reinterpret_cast<void(__thiscall*)(CUISysOpt*, void*)>(0x00978010);
 
+// 1. UI 界面改造：添加自定义分辨率与全局焦点选项
 void __fastcall CUISysOpt__OnCreate_hook(CUISysOpt* pThis, void* _EDX, void* pData) {
     CUISysOpt__OnCreate(pThis, pData);
 
@@ -71,6 +72,7 @@ void __fastcall CUISysOpt__OnCreate_hook(CUISysOpt* pThis, void* _EDX, void* pDa
 
 static auto CUISysOpt__GetSysOptFromCtrl = reinterpret_cast<void(__thiscall*)(CUISysOpt*)>(0x009692A0);
 
+// CUISysOpt__GetSysOptFromCtrl_hook：当玩家在界面上点击确定或应用时，把玩家选中的分辨率索引和复选框状态保存到内存变量中。
 void __fastcall CUISysOpt__GetSysOptFromCtrl_hook(CUISysOpt* pThis, void* _EDX) {
     CUISysOpt__GetSysOptFromCtrl(pThis);
     pThis->m_sysOptCur.bSysOpt_LargeScreen = g_cbResolution->m_nSelect;
@@ -80,8 +82,12 @@ void __fastcall CUISysOpt__GetSysOptFromCtrl_hook(CUISysOpt* pThis, void* _EDX) 
 }
 
 
+// 2. 配置文件的读取与保存（持久化）
+// 为了让玩家下一次上游戏时不用重新设置，需要把配置写进注册表或 config.ini。
 static auto CConfig__LoadGlobal = reinterpret_cast<void(__thiscall*)(CConfig*)>(0x004B51B0);
 
+// CConfig__LoadGlobal_hook：在游戏启动加载全局配置时，读取自定义的 soScreenMode 和 soGlobalFocus 字段，
+// 并利用位运算解包，恢复分辨率和窗口模式设置。
 void __fastcall CConfig__LoadGlobal_hook(CConfig* pThis, void* _EDX) {
     CConfig__LoadGlobal(pThis);
     int32_t soScreenMode = pThis->GetOpt_Int(CConfig::GLOBAL_OPT, "soScreenMode", 0, 0, (4 << 1) | 1);
@@ -92,6 +98,7 @@ void __fastcall CConfig__LoadGlobal_hook(CConfig* pThis, void* _EDX) {
 
 static auto CConfig__SaveGlobal = reinterpret_cast<void(__thiscall*)(CConfig*)>(0x004B3BE0);
 
+// CConfig__SaveGlobal_hook：在游戏关闭或保存设置时，将当前的分辨率宽高度和后台声音开关通过位运算打包，写回配置文件。
 void __fastcall CConfig__SaveGlobal_hook(CConfig* pThis, void* _EDX) {
     CConfig__SaveGlobal(pThis);
     int32_t soScreenMode = (pThis->m_sysOpt.bSysOpt_LargeScreen << 1);
@@ -102,8 +109,11 @@ void __fastcall CConfig__SaveGlobal_hook(CConfig* pThis, void* _EDX) {
     pThis->SetOpt_Int(CConfig::GLOBAL_OPT, "soGlobalFocus", g_bGlobalFocus);
 }
 
+// 3. 实现窗口切到后台不静音（Global Focus）
 static auto CConfig__ApplySysOpt = reinterpret_cast<void(__thiscall*)(CConfig*, CONFIG_SYSOPT*, int32_t)>(0x004B2300);
 
+// CConfig__ApplySysOpt_hook：这里直接通过硬编码的 COM 组件接口，获取了 DirectSound 8 的声音对象（Sound_DX8），然后修改其 globalFocus 属性。
+// 效果：将其置为 true 后，哪怕你切出游戏去聊天或看网页，游戏的背景音乐（BGM）和音效依然会继续播放。如果发生了地图切换，还会自动重新播放当前地图的 BGM。 
 void __fastcall CConfig__ApplySysOpt_hook(CConfig* pThis, void* _EDX, CONFIG_SYSOPT* pSysOpt, int32_t bApplyVideo) {
     CConfig__ApplySysOpt(pThis, pSysOpt, bApplyVideo);
     if (pSysOpt && !bApplyVideo) {
@@ -127,7 +137,16 @@ void __fastcall CConfig__ApplySysOpt_hook(CConfig* pThis, void* _EDX, CONFIG_SYS
 #endif
 }
 
+/*
+根据玩家在下拉框选中的索引（0~4），动态将游戏的目标分辨率调整为对应的宽高（最高 1920x1080）。
+解决画面断层：原版游戏在放大分辨率时，游戏画面中心点会错位。这里使用 get_gr()->AdjustCenter(0, -nAdjustCenterY); 
+向上修正了垂直中心点（偏置 84 像素）。
+通知刷新：调用 CWndMan 和 CMapLoadable 的原版内部刷新函数（通过内存地址 0x009B3150 和 0x0061F550），
+通知游戏底层：“屏幕分辨率变了，赶紧重新计算所有 UI 布局和当前地图的可见视野！”
 
+在CConfig::ApplySysOpt里面会调用 -》  CWvsContext::SetScreenResolution
+
+*/
 static auto CWvsContext__SetScreenResolution = reinterpret_cast<void(__thiscall*)(CWvsContext*, bool, bool)>(0x009CD0C0);
 
 void __fastcall CWvsContext__SetScreenResolution_hook(CWvsContext* pThis, void* _EDX, bool bLargeScreen, bool bSave) {
@@ -160,11 +179,15 @@ void __fastcall CWvsContext__SetScreenResolution_hook(CWvsContext* pThis, void* 
         }
     }
     if (SUCCEEDED(get_gr()->screenResolution(nScreenWidth, nScreenHeight))) {
+        // 向上修正了垂直中心点（偏置 84 像素）。
         get_gr()->AdjustCenter(0, -nAdjustCenterY);
         pThis->m_nScreenWidth = nScreenWidth;
         pThis->m_nScreenHeight = nScreenHeight;
         pThis->m_nAdjustCenterY = nAdjustCenterY;
         pThis->m_bIsLargeScreen = bLargeScreen;
+
+        // 通知刷新：调用 CWndMan 和 CMapLoadable 的原版内部刷新函数（通过内存地址 0x009B3150 和 0x0061F550），
+        //        通知游戏底层：“屏幕分辨率变了，赶紧重新计算所有 UI 布局和当前地图的可见视野！”
         if (CWndMan::IsInstantiated()) {
             // CWndMan::OnEventChangeScreenResolution(TSingleton<CWndMan>::GetInstance())
             reinterpret_cast<void(__thiscall*)(CWndMan*)>(0x009B3150)(CWndMan::GetInstance());
@@ -184,6 +207,8 @@ void __fastcall CWvsContext__SetScreenResolution_hook(CWvsContext* pThis, void* 
 
 static auto CDialog__CreateDlg = reinterpret_cast<void(__thiscall*)(CDialog*, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, void*, CWnd::UIOrigin)>(0x004FE6D0);
 
+// 世界地图居中：Hook 了 CDialog__CreateDlg。原版打开世界地图是写死坐标的，
+// 作者将其修改为 (屏幕宽度 - 窗口宽度) / 2，让大地图在任何分辨率下都能绝对居中。
 void __fastcall CDialog__CreateDlg_hook(CDialog* pThis, void* _EDX, int32_t l, int32_t t, int32_t w, int32_t h, int32_t z, int32_t bScreenCoord, void* pData, CWnd::UIOrigin origin) {
     l = (CWvsContext::GetInstance()->m_nScreenWidth - w) / 2;
     t = (CWvsContext::GetInstance()->m_nScreenHeight - h) / 2 - 30;
@@ -198,6 +223,10 @@ public:
 
 static auto CWnd__CreateWnd = reinterpret_cast<void(__thiscall*)(CWnd*, int, int, int, int, int, int, void*, int, int)>(0x009AD8F0);
 
+// 原本全服大喇叭的公告特效是基于原版屏幕宽度滚动的。
+// 作者修改了 CAvatarMegaphone__CreateWnd_hook，使其获取实时的大分辨率宽度。
+// 同时通过 Patch4 修改了它消失、销毁时的坐标边界（原版可能写死了 800，这里改成了 1920 + 100），
+// 防止大喇叭在宽屏下飞到一半突然凭空消
 void __fastcall CAvatarMegaphone__CreateWnd_hook(CAvatarMegaphone* pThis, void* _EDX, int l, int t, int w, int h, int z, int bScreenCoord, void* pData, int bSetFocus, int org) {
     pThis->m_nScreenWidth = CWvsContext::GetInstance()->m_nScreenWidth;
     CWnd__CreateWnd(pThis, pThis->m_nScreenWidth, t, w, h, z, bScreenCoord, pData, bSetFocus, org);
@@ -217,9 +246,13 @@ void AttachSystemOptionMod() {
 
     // CAvatarMegaphone::CAvatarMegaphone - patch screen width
     PatchCall(0x0046DD42, reinterpret_cast<uintptr_t>(&CAvatarMegaphone__CreateWnd_hook));
+    // // 同时通过 Patch4 修改了它消失、销毁时的坐标边界（原版可能写死了 800，这里改成了 1920 + 100），
+    // 防止大喇叭在宽屏下飞到一半突然凭空消
     Patch4(0x0046D66B + 1, 1920 + 100); // CAvatarMegaphone::ByeAvatarMegaphone
     Patch4(0x0046D83D + 1, 1920 + 100); // CAvatarMegaphone::ByeAvatarMegaphone
 
+    // 鼠标指针限制边界：Patch4(0x009C20DF + 1, 1920) 等代码修改了游戏限制鼠标移动的边界，
+    // 允许鼠标移动到 1920x1080 的整个可见区域，而不是被卡在左上角的 800x600 范围内。（超过也没事）
     // CWvsApp::CreateWndManager - patch cursor boundary
     Patch4(0x009C20DF + 1, 1920);
     Patch4(0x009C20DA + 1, 1080);
@@ -227,6 +260,7 @@ void AttachSystemOptionMod() {
     // CUISysOpt::OnCreate - hide m_pCBScreen1024
     Patch4(0x0097826E + 1, 65);
 
+    // 屏蔽多显示器 Bug：最后一句通过特征码（Pattern）在 Gr2D_DX9.DLL 里定位了一段函数，并强行将其改为 Return Zero。目的是禁止游戏自带的、针对多显示器错误的窗口重定位功能。
     // Gr2D_DX9.dll - disable window repositioning function as it doesn't account for multiple monitors
     PatchRetZero(reinterpret_cast<uintptr_t>(GetAddressByPattern("GR2D_DX9.DLL", "56 8B F1 8B 86 A8 00 00 00")));
 }

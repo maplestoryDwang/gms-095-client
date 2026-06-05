@@ -34,6 +34,7 @@ public:
 
     MEMBER_AT(CONFIG_SYSOPT, 0x6C, m_sysOpt)
 
+     // CConfig::GetOpt_Int
     int32_t GetOpt_Int(int32_t nType, const char* sKey, int32_t nDefaultValue, int32_t nLowBound, int32_t nHighBound) {
         return reinterpret_cast<int32_t(__thiscall*)(CConfig*, int32_t, const char*, int32_t, int32_t, int32_t)>(0x004B25F0)(this, nType, sKey, nDefaultValue, nLowBound, nHighBound);
     }

@@ -51,6 +51,7 @@ void __fastcall CUISysOpt__OnCreate_hook(CUISysOpt* pThis, void* _EDX, void* pDa
         "1366 x 768",
         "1600 x 900",
         "1920 x 1080",
+        "2560 x 1440",
     };
     size_t nResolution = sizeof(asResolution) / sizeof(asResolution[0]);
     for (size_t i = 0; i < nResolution; ++i) {
@@ -176,6 +177,11 @@ void __fastcall CWvsContext__SetScreenResolution_hook(CWvsContext* pThis, void* 
             nScreenHeight = 1080;
             nAdjustCenterY = 84;
             break;
+        case 5:
+            nScreenWidth = 2560;
+            nScreenHeight = 1440;
+            nAdjustCenterY = 84;
+            break;
         }
     }
     if (SUCCEEDED(get_gr()->screenResolution(nScreenWidth, nScreenHeight))) {
@@ -260,7 +266,8 @@ void AttachSystemOptionMod() {
     // CUISysOpt::OnCreate - hide m_pCBScreen1024
     Patch4(0x0097826E + 1, 65);
 
-    // 屏蔽多显示器 Bug：最后一句通过特征码（Pattern）在 Gr2D_DX9.DLL 里定位了一段函数，并强行将其改为 Return Zero。目的是禁止游戏自带的、针对多显示器错误的窗口重定位功能。
+    // 屏蔽多显示器 Bug：最后一句通过特征码（Pattern）在 Gr2D_DX9.DLL 里定位了一段函数，并强行将其改为 Return Zero。
+    // 目的是禁止游戏自带的、针对多显示器错误的窗口重定位功能。
     // Gr2D_DX9.dll - disable window repositioning function as it doesn't account for multiple monitors
     PatchRetZero(reinterpret_cast<uintptr_t>(GetAddressByPattern("GR2D_DX9.DLL", "56 8B F1 8B 86 A8 00 00 00")));
 }

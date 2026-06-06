@@ -121,7 +121,7 @@ inline void AttachClientHooks() {
     AttachTemporaryStatMod();
     AttachElementalDamageMod();
     AttachIconIconMod();                // 更新宠物在物品栏的icon
-    //AttachQuickSlot();
+    AttachQuickSlot();
     AttachExceptionHandler();
 }
 

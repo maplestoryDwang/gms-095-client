@@ -1,97 +1,102 @@
 #include "hook.h"
 #include "wvs/wvscontext.h"
 
- 
+
+// 26键位 一排13个
+// QuickslotKeyMapDefault、QuickslotKeyMap 和 QuickslotKeyMapOld 存放的是按键数据，每行第一个Byte是键码，
+// 这个键码你可以在 UI.wz/UIWindow.img/KeyConfig/key 中找到，请保持三个数组一致。如果要扩展的话，除了添加行数以外还要修改后面的代码。
 UCHAR QuickslotKeyMapDefault[] = {
         42, 0, 0, 0,
+        82, 0, 0, 0,
+        71, 0, 0, 0,
+        73, 0, 0, 0,
         2, 0, 0, 0,
         3, 0, 0, 0,
         4, 0, 0, 0,
         5, 0, 0, 0,
         6, 0, 0, 0,
         7, 0, 0, 0,
-        30, 0, 0, 0,
-        31, 0, 0, 0,
-        32, 0, 0, 0,
-        33, 0, 0, 0,
-        34, 0, 0, 0,
-        35, 0, 0, 0,
+        8, 0, 0, 0,
+        9, 0, 0, 0,
+        10, 0, 0, 0,
  
         29, 0, 0, 0,
+        83, 0, 0, 0,
+        79, 0, 0, 0,
+        81, 0, 0, 0,
         16, 0, 0, 0,
         17, 0, 0, 0,
         18, 0, 0, 0,
         19, 0, 0, 0,
         20, 0, 0, 0,
-        21, 0, 0, 0,
-        44, 0, 0, 0,
-        45, 0, 0, 0,
-        46, 0, 0, 0,
-        47, 0, 0, 0,
-        48, 0, 0, 0,
-        49, 0, 0, 0,
+        30, 0, 0, 0,
+        31, 0, 0, 0,
+        32, 0, 0, 0,
+        33, 0, 0, 0,
 };
  
 UCHAR QuickslotKeyMap[] = {
         42, 0, 0, 0,
+        82, 0, 0, 0,
+        71, 0, 0, 0,
+        73, 0, 0, 0,
         2, 0, 0, 0,
         3, 0, 0, 0,
         4, 0, 0, 0,
         5, 0, 0, 0,
         6, 0, 0, 0,
         7, 0, 0, 0,
-        30, 0, 0, 0,
-        31, 0, 0, 0,
-        32, 0, 0, 0,
-        33, 0, 0, 0,
-        34, 0, 0, 0,
-        35, 0, 0, 0,
+        8, 0, 0, 0,
+        9, 0, 0, 0,
+        10, 0, 0, 0,
  
         29, 0, 0, 0,
+        83, 0, 0, 0,
+        79, 0, 0, 0,
+        81, 0, 0, 0,
         16, 0, 0, 0,
         17, 0, 0, 0,
         18, 0, 0, 0,
         19, 0, 0, 0,
         20, 0, 0, 0,
-        21, 0, 0, 0,
-        44, 0, 0, 0,
-        45, 0, 0, 0,
-        46, 0, 0, 0,
-        47, 0, 0, 0,
-        48, 0, 0, 0,
-        49, 0, 0, 0,
+        30, 0, 0, 0,
+        31, 0, 0, 0,
+        32, 0, 0, 0,
+        33, 0, 0, 0,
 };
  
 UCHAR QuickslotKeyMapOld[] = {
         42, 0, 0, 0,
+        82, 0, 0, 0,
+        71, 0, 0, 0,
+        73, 0, 0, 0,
         2, 0, 0, 0,
         3, 0, 0, 0,
         4, 0, 0, 0,
         5, 0, 0, 0,
         6, 0, 0, 0,
         7, 0, 0, 0,
-        30, 0, 0, 0,
-        31, 0, 0, 0,
-        32, 0, 0, 0,
-        33, 0, 0, 0,
-        34, 0, 0, 0,
-        35, 0, 0, 0,
+        8, 0, 0, 0,
+        9, 0, 0, 0,
+        10, 0, 0, 0,
  
         29, 0, 0, 0,
+        83, 0, 0, 0,
+        79, 0, 0, 0,
+        81, 0, 0, 0,
         16, 0, 0, 0,
         17, 0, 0, 0,
         18, 0, 0, 0,
         19, 0, 0, 0,
         20, 0, 0, 0,
-        21, 0, 0, 0,
-        44, 0, 0, 0,
-        45, 0, 0, 0,
-        46, 0, 0, 0,
-        47, 0, 0, 0,
-        48, 0, 0, 0,
-        49, 0, 0, 0,
+        30, 0, 0, 0,
+        31, 0, 0, 0,
+        32, 0, 0, 0,
+        33, 0, 0, 0,
 };
  
+
+// QuickSlotKeyPos 存放的是每个按键的x/y坐标，分别对应每行第 1 列和第 5 列，行数和上面的三个数组对应，083的长键盘同理
 UCHAR QuickSlotKeyPos[] = {
         7,   0, 0, 0, 15, 0, 0, 0,
         40,  0, 0, 0, 15, 0, 0, 0,
@@ -105,7 +110,8 @@ UCHAR QuickSlotKeyPos[] = {
         48,  1, 0, 0, 15, 0, 0, 0,
         81,  1, 0, 0, 15, 0, 0, 0,
         114, 1, 0, 0, 15, 0, 0, 0,
-        147, 1, 0, 0, 15, 0, 0, 0,
+        147, 1, 0, 0, 15, 0, 0, 0, // + 33
+
         7,   0, 0, 0, 48, 0, 0, 0,
         40,  0, 0, 0, 48, 0, 0, 0,
         73,  0, 0, 0, 48, 0, 0, 0,
@@ -121,6 +127,9 @@ UCHAR QuickSlotKeyPos[] = {
         147, 1, 0, 0, 48, 0, 0, 0
 };
  
+// FuncKeyMappedInfo 和 FuncKeyMappedSkillCooltime是存放临时数据的，如果你要扩展更多按键的话，别忘了扩展这两个数组。
+
+// 312/26 = 12个
 UCHAR FuncKeyMappedInfo[312] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -150,6 +159,7 @@ UCHAR FuncKeyMappedInfo[312] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
  
+// 104/26 = 4
 UCHAR FuncKeyMappedSkillCooltime[104] = {
         255, 255, 255, 255,
         255, 255, 255, 255,
@@ -179,6 +189,7 @@ UCHAR FuncKeyMappedSkillCooltime[104] = {
         255, 255, 255, 255
 };
  
+// 312 / 26 = 12（）
 void resetFuncKeyMappedInfo() {
     for (int i = 0; i < 312; ++i) {
         FuncKeyMappedInfo[i] = 0;
@@ -212,13 +223,13 @@ _declspec(naked) void CompareValidateFuncKeyMappedInfo_cave()
     }
 }
  
- 
+ // 800x600的那两个按钮值
 DWORD QuickSlotBtOpenCcRtn = 0x0087540F;
 _declspec(naked) void QuickSlotBtOpenCc()
 {
     _asm {
         push 0    // y 偏移
-        push 80  // x偏移
+        push 40  // x偏移 原来80
         push 1006 // id
         jmp QuickSlotBtOpenCcRtn
     }
@@ -229,7 +240,7 @@ _declspec(naked) void QuickSlotBtCloseCc()
 {
     _asm {
         push 0    // y 偏移
-        push 80  // x偏移
+        push 40  // x偏移 原来80
         push 1006 // id
         jmp QuickSlotBtCloseCcRtn
     }
@@ -480,15 +491,15 @@ DWORD QuickSlotIsEnableFunc = 0x0086D2F0;
 DWORD StatusBarClickRange_Rtn_INT = 0x0086D62F;
 DWORD StatusBarClickRange_Rtn_ZERO = 0x0086D626;
 DWORD StatusBarClickRange_Rtn;
-void StatusBarClickRangeFunc()
-{
-    int m_nChatWndType; // 聊天窗状态 1=隐藏 3=显示
+
+void StatusBarClickRangeFunc() {
+    int m_nChatWndType;   // 聊天窗状态 1=隐藏 3=显示
     int m_nChatWndHeight; // 聊天窗高度 最大值为489
-    int rx; // 鼠标位置，从statusbar算起，而非整个游戏窗口
-    int ry; // 鼠标位置，从statusbar算起，而非整个游戏窗口
-    int m_bDragChatWnd; // 是否拖拽状态
+    int rx;               // 鼠标位置，从statusbar算起，而非整个游戏窗口
+    int ry;               // 鼠标位置，从statusbar算起，而非整个游戏窗口
+    int m_bDragChatWnd;   // 是否拖拽状态
     int quickSlotIsEnabled;
- 
+
     _asm {
         push eax
         mov  eax, [esi + 1804h]
@@ -504,21 +515,19 @@ void StatusBarClickRangeFunc()
         mov  quickSlotIsEnabled, eax
         pop  eax
     }
- 
+
     int chatTopY = 489 - m_nChatWndHeight;
- 
+
     StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_ZERO;
     int curWidth = CWvsContext::GetInstance()->m_nScreenWidth;
-    if (curWidth > 800)
-    {
-        if (m_nChatWndType == 1)
-        {
+
+    if (curWidth > 800) {
+        if (m_nChatWndType == 1) {
             if (rx < 1321 && ry > 506) // 鼠标在状态栏
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
-        }
-        else {
+        } else {
             if (rx < 564 && ry > chatTopY) // 鼠标在聊天框头部以下的区域
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
@@ -527,15 +536,13 @@ void StatusBarClickRangeFunc()
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
-            //if (m_bDragChatWnd == 1 && rx < 564 && ry > chatTopY) // 拖拽聊天框状态下鼠标在状态栏
+            // if (m_bDragChatWnd == 1 && rx < 564 && ry > chatTopY) // 拖拽聊天框状态下鼠标在状态栏
             //{
-            //    StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
-            //}
+            //     StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
+            // }
         }
-    }
-    else {
-        if (m_nChatWndType == 1)
-        {
+    } else {
+        if (m_nChatWndType == 1) {
             if (rx < 1321 && ry > 506) // 鼠标在状态栏
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
@@ -544,8 +551,7 @@ void StatusBarClickRangeFunc()
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
-        }
-        else {
+        } else {
             if (rx < 564 && ry > chatTopY) // 鼠标在聊天框头部以下的区域
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
@@ -560,8 +566,10 @@ void StatusBarClickRangeFunc()
             }
         }
     }
- 
 }
+
+
+//StatusBarClickRangeFunc 这个方法很重要，它会影响你鼠标的可点击区域。因为官方的客户端逻辑很乱，所以我这里直接 Hook 出来重写了。
 void _declspec(naked) StatusBarClickRange()
 {
     _asm {
@@ -572,82 +580,82 @@ void _declspec(naked) StatusBarClickRange()
  
 void AttachQuickSlot() {
     Patch4(0x00876BFE + 1, 1320); // CUIStatusBar宽度扩充1024 -> 1320
-    //Patch4(0x0087B62A + 1, 312); // 800x600 quickslot位置 // 会移动整个框架
+    // Patch4(0x0087B62A + 1, 312); // 800x600 quickslot位置 // 会移动整个框架
     PatchJmp(0x00875406, reinterpret_cast<uintptr_t>(&QuickSlotBtOpenCc), 9);
     PatchJmp(0x00875475, reinterpret_cast<uintptr_t>(&QuickSlotBtCloseCc), 9);
     PatchJmp(0x00875102, reinterpret_cast<uintptr_t>(&QuickSlotXcc), 6);
-    //Patch4(0x0086D582 + 2, 368);// 可按区域 针对800x600 由下面替代了
-    //Patch4(0x0086D5BA + 2, 91);// 可按区域 针对800x600 由下面替代了
+    // Patch4(0x0086D582 + 2, 368);// 可按区域 针对800x600 由下面替代了
+    // Patch4(0x0086D5BA + 2, 91);// 可按区域 针对800x600 由下面替代了
     PatchJmp(0x0086D582, reinterpret_cast<uintptr_t>(&StatusBarClickRange), 164);
- 
-    //CQuickslotKeyMappedMan::SaveQuickslotKeyMap
+
+    // CQuickslotKeyMappedMan::SaveQuickslotKeyMap
     PatchJmp(0x006C60D5, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_SaveQuickslotKeyMap_QKM_cc), 6); // 发送服务端保存
     PatchJmp(0x006C60FC, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_SaveQuickslotKeyMap_Copy_cc), 10);
- 
-    //CQuickslotKeyMappedMan::OnInit
-    //PatchJmp(0x006C6144, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_OnInit_QKM_cc)); // 接收服务端发来的请求 会重写覆盖本地的数组 // 配合上面的发送请求理论上可以让用户自定义快捷键布局
+
+    // CQuickslotKeyMappedMan::OnInit
+    // PatchJmp(0x006C6144, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_OnInit_QKM_cc)); // 接收服务端发来的请求 会重写覆盖本地的数组 // 配合上面的发送请求理论上可以让用户自定义快捷键布局
     PatchJmp(0x006C6169, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_OnInit_Copy_cc), 13);
- 
-    //CQuickslotKeyMappedMan::IsQuickslotKeyMapModified
+
+    // CQuickslotKeyMappedMan::IsQuickslotKeyMapModified
     PatchJmp(0x007D8200, reinterpret_cast<uintptr_t>(&IsQuickslotKeyMapModified_QKM_cc), 11);
- 
-    //CUIKeyConfig::~CUIKeyConfig
+
+    // CUIKeyConfig::~CUIKeyConfig
     PatchJmp(0x007D8D24, reinterpret_cast<uintptr_t>(&CUIKeyConfig_Copy_cc), 18);
- 
-    //CUIStatusBar::CQuickSlot::CompareValidateFuncKeyMappedInfo
+
+    // CUIStatusBar::CQuickSlot::CompareValidateFuncKeyMappedInfo
     PatchJmp(0x008710EB, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_FKM_cc), 5);
     PatchJmp(0x008710F4, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_QKM_cc), 14);
     PatchJmp(0x00871064, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_FKM2_cc), 8);
     Patch4(0x00871112 + 4, 26);
     PatchJmp(0x0087108B, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_cave), 5);
- 
-    //CUIStatusBar::CQuickSlot::Draw
+
+    // CUIStatusBar::CQuickSlot::Draw
     PatchJmp(0x008761CA, reinterpret_cast<uintptr_t>(&Draw_QKM_cc), 10);
     PatchJmp(0x00875B67, reinterpret_cast<uintptr_t>(&Draw_FKM_cc), 10);
     PatchJmp(0x00875BAD, reinterpret_cast<uintptr_t>(&Draw_FKM2_cc), 7);
     Patch1(0x0087639B + 2, 26);
-    Patch1(0x008762E4 + 2, 4);// 角标x
-    Patch1(0x008762DA + 2, 4);// 角标y
- 
-    //CUIStatusBar::CQuickSlot::GetPosByIndex
+    Patch1(0x008762E4 + 2, 4); // 角标x
+    Patch1(0x008762DA + 2, 4); // 角标y
+
+    // CUIStatusBar::CQuickSlot::GetPosByIndex
     Patch4(0x0086CCA9 + 3, (DWORD)&QuickSlotKeyPos);
     Patch4(0x0086CCB6 + 3, (DWORD)&QuickSlotKeyPos + 4);
     Patch1(0x0086CCA4 + 2, 26);
- 
-    //CUIStatusBar::GetShortCutIndexByPos
+
+    // CUIStatusBar::GetShortCutIndexByPos
     Patch4(0x0086D06C + 3, (DWORD)&QuickSlotKeyPos);
     Patch4(0x0086D0A7 + 3, (DWORD)&QuickSlotKeyPos + 4);
     Patch4(0x0086D0E2 + 3, (DWORD)&QuickSlotKeyPos);
     Patch4(0x0086D11D + 3, (DWORD)&QuickSlotKeyPos + 4);
     Patch1(0x0086D14A + 2, 26);
- 
-    //CDraggableMenu::OnDropped
+
+    // CDraggableMenu::OnDropped
     Patch1(0x00509D71 + 2, 25);
-    //CDraggableMenu::MapFuncKey
+    // CDraggableMenu::MapFuncKey
     Patch1(0x00509AF9 + 2, 26);
     PatchJmp(0x00509B75, reinterpret_cast<uintptr_t>(&CDraggableMenu_MapFuncKey_QKM_cc), 9);
-    //CDraggableSkill::MapFuncKey
+    // CDraggableSkill::MapFuncKey
     PatchJmp(0x0050A43A, reinterpret_cast<uintptr_t>(&CDraggableSkill_MapFuncKey_QKM_cc), 9);
-    //CDraggableItem::MapFuncKey
+    // CDraggableItem::MapFuncKey
     PatchJmp(0x005018A2, reinterpret_cast<uintptr_t>(&CDraggableItem_MapFuncKey_QKM_cc), 9);
- 
-    //CUIStatusBar::CQuickSlot::DrawConsumeItemCooltime
+
+    // CUIStatusBar::CQuickSlot::DrawConsumeItemCooltime
     PatchJmp(0x0086F701, reinterpret_cast<uintptr_t>(&DrawConsumeItemCooltime_FKM_cc), 6);
- 
-    //CUIStatusBar::CQuickSlot::DrawSkillCooltime
-    //PatchJmp(0x0086FFF2, reinterpret_cast<uintptr_t>(&DrawSkillCooltime_FKM_cc), 6); // 下面已覆盖
+
+    // CUIStatusBar::CQuickSlot::DrawSkillCooltime
+    // PatchJmp(0x0086FFF2, reinterpret_cast<uintptr_t>(&DrawSkillCooltime_FKM_cc), 6); // 下面已覆盖
     PatchJmp(0x0086FFEF, reinterpret_cast<uintptr_t>(&DrawSkillCooltime_SCT_cc), 9);
     Patch1(0x0087035E + 2, 26);
- 
-    //CQuickslotKeyMappedMan::DefaultQuickslotKeyMap
+
+    // CQuickslotKeyMappedMan::DefaultQuickslotKeyMap
     PatchJmp(0x006C5FF2, reinterpret_cast<uintptr_t>(&DefaultQuickslotKeyMap_cc), 15);
- 
-    //CUIStatusBar::TryBeginDragFuncKeyMappedIcon
+
+    // CUIStatusBar::TryBeginDragFuncKeyMappedIcon
     PatchJmp(0x00876C8A, reinterpret_cast<uintptr_t>(&TryBeginDragFuncKeyMappedIcon_QKM_cc), 10);
- 
-    //CUIStatusBar::OnMouseMove 修复tooltip
+
+    // CUIStatusBar::OnMouseMove 修复tooltip
     PatchJmp(0x0087ACBE, reinterpret_cast<uintptr_t>(&OnMouseMove_cc), 13);
- 
-    //CQuickSlot::~CQuickSlot
+
+    // CQuickSlot::~CQuickSlot
     PatchJmp(0x0086FB19, reinterpret_cast<uintptr_t>(&ResetFKMInfo), 6);
 }

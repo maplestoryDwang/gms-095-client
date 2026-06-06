@@ -1,8 +1,9 @@
-# 目的
+ # 目的
 cpp和hook记录学习，总有人觉得自己了不起，只有自己变强才不会被人冷嘲热讽。
 
 1. 了解插件的主要内容
 2. 了解自己的单机需要做哪些hook
+3. 新增
 
 ## 主要内容
 - launcher.cpp 登陆器的类，负责启动Maplestory.exe 并通过detour注入一个dll。
@@ -123,7 +124,9 @@ CWvsApp__Run_hook & CallUpdate_hook (主循环重构)
 
 
 
-
+## 新增功能
+1. 新增分辨率
+2. 新增长键盘
 
 
 

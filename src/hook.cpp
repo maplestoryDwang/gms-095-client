@@ -61,6 +61,10 @@ void* VMTHook(void* pInstance, void* pDetour, size_t uIndex) {
 */
 void* GetAddress(const char* sModuleName, const char* sProcName) {
     HMODULE hModule = GetModuleHandleA(sModuleName);
+    if (hModule == NULL) {
+        // 处理错误：记录日志、返回错误码等
+        return 0; // 或 throw
+    }
     if (!hModule) {
         hModule = LoadLibraryA(sModuleName);
     }
@@ -72,7 +76,7 @@ void* GetAddress(const char* sModuleName, const char* sProcName) {
 }
 
 
-bool HexCharToByte(char c, uint8_t* b) {
+static bool HexCharToByte(char c, uint8_t* b) {
     if ('0' <= c && c <= '9')
         *b = c - '0';
     else if ('A' <= c && c <= 'F')
@@ -89,7 +93,7 @@ bool HexCharToByte(char c, uint8_t* b) {
 工作原理：遇到正常的十六进制数（如 55），就转为字节存入 abPattern，并在 abMask 对应位置设为 0xFF（表示必须精确匹配）；
 遇到 ?? 通配符，则在 abMask 对应位置设为 0x00（表示任意字节都可以匹配）。
 */
-size_t ParsePattern(const char* sPattern, uint8_t* abPattern, uint8_t* abMask) {
+static  size_t ParsePattern(const char* sPattern, uint8_t* abPattern, uint8_t* abMask) {
     size_t i = 0;
     while (*sPattern) {
         if (*sPattern == ' ') {
@@ -126,6 +130,10 @@ size_t ParsePattern(const char* sPattern, uint8_t* abPattern, uint8_t* abMask) {
 */
 void* GetAddressByPattern(const char* sModuleName, const char* sPattern) {
     HMODULE hModule = GetModuleHandleA(sModuleName);
+    if (hModule == NULL) {
+        // 处理错误：记录日志、返回错误码等
+        return 0; // 或 throw
+    }
     if (!hModule) {
         hModule = LoadLibraryA(sModuleName);
     }

@@ -9,6 +9,9 @@
 #include "wvs/inputsystem.h"
 #include "wvs/animationdisplayer.h"
 #include <cstdint>
+#include <imm.h>
+#pragma comment(lib, "imm32.lib")
+
 
 
 static auto CUserLocal__Jump = reinterpret_cast<void(__thiscall*)(CUserLocal*, int32_t)>(0x0090A1D0);
@@ -165,6 +168,103 @@ void __declspec(naked) CUIQuestInfoDetail__Draw_hook() {
 }
 
 
+
+
+// IME-单行输入框能用，且不卡门、排除密码框-以下-江奈Mizuki
+// DisableIme()来自Beidou-Cosmic
+void DisableIme() {
+    HWND hwnd = GetForegroundWindow(); // 获取当前前台窗口的句柄
+    if (hwnd) {
+        // 获取输入法上下文
+        HIMC hImc = ImmGetContext(hwnd);
+        if (hImc) {
+            // 解除输入法上下文的关联
+            ImmAssociateContext(hwnd, NULL);
+            ImmReleaseContext(hwnd, hImc);
+        }
+    }
+}
+
+BYTE enabled = 1; // IME是否启用的标记,有一个疑问，这个helper.cpp函数并没有#program once 在这里定义一个标记是否合适？是不是另外新建一个cpp文件写比较好？
+// destroyWindow_GMS095()修改自Beidou-Cosmic的destroyWindow
+
+// CCtrlWnd::Destroy
+/*
+void __thiscall CCtrlWnd::Destroy(CCtrlWnd *this)
+{
+  IWzVector2D *m_pInterface; // eax
+
+  if ( this->m_nCtrlId != -1 )
+  {
+    CWndMan::Unlink(TSingleton<CWndMan>::ms_pInstance, &this->IUIMsgHandler);
+    this->OnDestroy(this);
+    CWnd::RemoveChild(this->m_pParent, this);
+    this->m_pParent = 0;
+    m_pInterface = this->m_pLTCtrl.m_pInterface;
+    if ( m_pInterface )
+    {
+      this->m_pLTCtrl.m_pInterface = 0;
+      m_pInterface->Release(m_pInterface);
+    }
+    this->m_nCtrlId = -1;
+  }
+}
+*/
+
+
+DWORD destroyWindowRtnAddr = 0x004F0268;
+__declspec(naked) void destroyWindow_GMS095() {
+    __asm {
+		mov dword ptr [esi+14h], 0FFFFFFFFh      // 原本GMS095的CCtrlWnd::Destroy中的this->m_nCtrlId = -1;
+ 
+		cmp enabled, 0
+		jz label_return                      // 如果IME已经禁用了，就不必禁用了
+ 
+		call DisableIme
+		mov enabled, 0 // 如果IME还没禁用，就禁用，并把enabled设置成1
+ 
+		label_return :
+		jmp destroyWindowRtnAddr // 补丁执行完了，贴回去。
+    }
+}
+
+// SingleLineIME()实现了GMS095版本的激活单行输入框的输入法，并且是密码栏的时候不会调出输入法-江奈Mizuki
+DWORD EnableIMEAttr = 0x009B4D50; //void __thiscall CWndMan::EnableIME(CWndMan *this, int bEnable)
+DWORD SingleLineIMERtnAttr = 0x004DE8F0;
+__declspec(naked) void SingleLineIME() {
+    __asm {
+		cmp[esi + 0x80], 1 // 判断是否是密码框。在095IDB里CCtrlEdit的结构体里看到偏移0x84是int m_bPasswd，而CCtrlEdit::OnSetFocus函数传进来的应该是 IUIMsgHandler* this，所以所有调用本地变量地址的偏移量都会偏差0x4
+        jz label_disable                // 如果是密码框直接disable
+        push 1
+        call EnableIMEAttr // 以1为参数调用void __thiscall CWndMan::EnableIME(CWndMan *this, int bEnable)
+        mov enabled, 1
+        jmp SingleLineIMERtnAttr       // 补丁执行完了，贴回去。
+ 
+        label_disable :
+		call DisableIme
+        mov enabled, 0
+		jmp SingleLineIMERtnAttr       // 补丁执行完了，贴回去。
+
+    }
+}
+
+// 安装 IME 补丁
+void InstallImePatch() {
+
+    PatchJmp(0x004DE8E9, reinterpret_cast<uintptr_t>(SingleLineIME));
+    PatchJmp(0x004F0261, reinterpret_cast<uintptr_t>(destroyWindow_GMS095));
+
+    // IsDBCSLeadByte(*Buffer) 
+    PatchNop(0x00880001, 0x00880006); // 聊天支持中文-按下回车的检测
+
+    // IsDBCSLeadByte(*v7)
+    PatchNop(0x008E87CE, 0x008E87D3); // 聊天支持中文-对消息的检测
+
+    // is_valid_character_name
+
+    PatchNop(0x007475E4, 0x007475EA); // 角色名支持中文
+}
+
 void AttachClientHelper() {
     // EqSlotInfo sEqSlotInfo[BP_PETWEAR] - fix pet equip slot position
     Patch4(0x00C614C0, 110);
@@ -190,4 +290,7 @@ void AttachClientHelper() {
     ATTACH_HOOK(get_weapon_attack_speed, get_weapon_attack_speed_hook); // append attack speed value to weapon speed string
 
     PatchJmp(CUIQuestInfoDetail__Draw_jmp, reinterpret_cast<uintptr_t>(&CUIQuestInfoDetail__Draw_hook)); // replace "Low Level Quest"
+
+    // 中文输入法
+    InstallImePatch();
 }

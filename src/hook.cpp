@@ -61,10 +61,6 @@ void* VMTHook(void* pInstance, void* pDetour, size_t uIndex) {
 */
 void* GetAddress(const char* sModuleName, const char* sProcName) {
     HMODULE hModule = GetModuleHandleA(sModuleName);
-    if (hModule == NULL) {
-        // 处理错误：记录日志、返回错误码等
-        return 0; // 或 throw
-    }
     if (!hModule) {
         hModule = LoadLibraryA(sModuleName);
     }
@@ -130,10 +126,6 @@ static  size_t ParsePattern(const char* sPattern, uint8_t* abPattern, uint8_t* a
 */
 void* GetAddressByPattern(const char* sModuleName, const char* sPattern) {
     HMODULE hModule = GetModuleHandleA(sModuleName);
-    if (hModule == NULL) {
-        // 处理错误：记录日志、返回错误码等
-        return 0; // 或 throw
-    }
     if (!hModule) {
         hModule = LoadLibraryA(sModuleName);
     }

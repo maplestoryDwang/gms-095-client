@@ -118,10 +118,10 @@ inline void AttachClientHooks() {
     AttachClientHelper();                // 显示各种ID
     AttachClientInlink();
     AttachSystemOptionMod();            // 系统配置多分辨率
-    AttachTemporaryStatMod();
+    AttachTemporaryStatMod();           // 配置技能状态和CD状态图标
     AttachElementalDamageMod();
     AttachIconIconMod();                // 更新宠物在物品栏的icon
-    AttachQuickSlot();
+    AttachQuickSlot();                  // 配置长键盘。
     AttachExceptionHandler();
 }
 

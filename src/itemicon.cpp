@@ -25,6 +25,9 @@ struct GW_ItemSlotPet : GW_ItemSlotBase {
 作用：获取玩家当前召唤的宠物数据。
 原理：通过 __thiscall 调用游戏内存地址 0x008E3030 处的原生函数。输入参数 nIndex（冒险岛支持同时召唤 3 只宠物，索引为 0, 1, 2），返回对应槽位上活跃宠物的指针。
 */
+
+// CUser::GetActivePetItemSlot 0x008E3030
+
 ZRef<GW_ItemSlotPet> GetActivePetItemSlot(CUser* pUser, int nIndex) {
     ZRef<GW_ItemSlotPet> pItemSlot;
     reinterpret_cast<ZRef<GW_ItemSlotPet>*(__thiscall*)(CUser*, ZRef<GW_ItemSlotPet>*, int)>(0x008E3030)(pUser, std::addressof(pItemSlot), nIndex);
@@ -70,7 +73,7 @@ static auto CItemInfo__DrawItemIconForSlot_jmp = 0x007CD3FB;
 static auto CItemInfo__DrawItemIconForSlot_ret = 0x007CD400;
 void __declspec(naked) CItemInfo__DrawItemIconForSlot_hook() {
     __asm {
-        push    esi ; GW_ItemSlotBase*
+        push    esi ; GW_ItemSlotBase*                  // 此时 ESI 寄存器里刚好存着游戏原本的物品指针 (GW_ItemSlotBase*)
         call    CItemInfo__DrawItemIconForSlot_helper   // 注意是__fastcall
         jmp     [ CItemInfo__DrawItemIconForSlot_ret ]
     }

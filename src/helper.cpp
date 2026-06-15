@@ -265,6 +265,85 @@ void InstallImePatch() {
     PatchNop(0x007475E4, 0x007475EA); // 角色名支持中文
 }
 
+
+// 1. 定义你找到的 StatPair 结构体
+struct StatPair {
+    uint32_t dwStatFlag;
+    int32_t nValue;
+};
+
+// 2. 声明原函数指针（请将 0x00XXXXXX 替换为 GetIdealStatUp 的实际地址）
+static auto Original_GetIdealStatUp = reinterpret_cast<int(__cdecl*)(void*, int, ZArray<StatPair>*)>(0x0073DDB0);
+
+
+// 3. 编写你的 Hook 函数
+int __cdecl GetIdealStatUp_hook(void* bs, int bWantToBeInfighter, ZArray<StatPair>* aStatUp) {
+    // 1. 先让原函数运行，生成原生数组
+    int ret = Original_GetIdealStatUp(bs, bWantToBeInfighter, aStatUp);
+
+    // 2. 拦截并进行全职业高智能清洗
+    if (ret && aStatUp && !aStatUp->IsEmpty()) {
+        uint32_t count = aStatUp->GetCount();
+
+        bool hasSTR = false;
+        bool hasDEX = false;
+        bool hasINT = false;
+        bool hasLUK = false;
+
+        // 遍历一遍，看看当前职业都涉及到了哪些属性标签
+        for (uint32_t i = 0; i < count; ++i) {
+            uint32_t flag = (*aStatUp)[i].dwStatFlag;
+            if (flag == 64)
+                hasSTR = true;
+            if (flag == 128)
+                hasDEX = true;
+            if (flag == 256)
+                hasINT = true;
+            if (flag == 512)
+                hasLUK = true;
+        }
+
+        // 智能判定当前职业真正的纯主属性 Flag
+        uint32_t targetMainFlag = 64; // 默认给力量
+
+        if (hasINT) {
+            // 只要原生数组带了智力(256)，100%是法师大系 -> 锁死智力
+            targetMainFlag = 256;
+        } else if (hasLUK && hasDEX) {
+            // 既有运气(512)又有敏捷(128)，100%是飞侠大系 -> 锁死运气
+            targetMainFlag = 512;
+        } else if (hasSTR && hasDEX) {
+            // 【核心高明之处】：
+            // 进入这里的包括：战士、弓箭手、拳手(力海盗)、枪手(敏海盗)
+            if (count > 1) {
+                targetMainFlag = (*aStatUp)[1].dwStatFlag;  // 主属性在1的位置，闹麻了 dwang - -
+            } else {
+                targetMainFlag = (*aStatUp)[0].dwStatFlag;  // 如果只有一个那就是主属性？
+            }
+        } else {
+            // 极端兜底策略（如果是个未知或奇怪的魔改职业，直接跟从第 0 项）
+            targetMainFlag = (*aStatUp)[0].dwStatFlag;
+        }
+
+        // 3. 强行把我们判定出来的绝对主属性，塞到第 0 位，并给 999 
+        StatPair mainStat = {targetMainFlag, 999};
+        (*aStatUp)[0] = mainStat;
+
+        // 4. 暴力将 ZArray 的内存长度（Count）斩断修改为 1
+        // 让外层分配点数时，只能看到 index 0 的纯主属性，副属性物理蒸发！
+        StatPair* raw_a = static_cast<StatPair*>(*aStatUp);
+        if (raw_a != nullptr) {
+            uint32_t* pCount = reinterpret_cast<uint32_t*>(raw_a) - 1;
+            *pCount = 1;
+        }
+    }
+
+    return ret;
+}
+
+
+
+
 void AttachClientHelper() {
     // EqSlotInfo sEqSlotInfo[BP_PETWEAR] - fix pet equip slot position
     Patch4(0x00C614C0, 110);
@@ -293,4 +372,10 @@ void AttachClientHelper() {
 
     // 中文输入法
     InstallImePatch();
+
+
+    // 后来发现只有战士不用，其他职业还是用副属性的- -
+    //ATTACH_HOOK(Original_GetIdealStatUp, GetIdealStatUp_hook); // hook自动加点
+
+
 }

@@ -247,7 +247,7 @@ void AttachSystemHooks() {
     ATTACH_HOOK(SetUnhandledExceptionFilter_orig, SetUnhandledExceptionFilter_hook);
 
     // 作用：实现客户端多开（解除单开限制）。
-    // 游戏相关的功能hook也在这里 
+    // 注意！游戏相关的功能hook也在这里 
     ATTACH_HOOK(CreateMutexA_orig, CreateMutexA_hook);
 
     // 作用：接管游戏窗口创建、自定义窗口标题、实现窗口拖动/防卡死。

@@ -200,7 +200,7 @@ void PatchStr(uintptr_t pAddress, const char* sValue) {
 */
 void PatchJmp(uintptr_t pAddress, uintptr_t pDestination) {
     Patch1(pAddress, 0xE9);
-    Patch4(pAddress + 1, pDestination - pAddress - 5);
+    Patch4(pAddress + 1, pDestination - pAddress - 5); // Æ«ÒÆÁ¿
 }
 
 void PatchJmp(uintptr_t pAddress, uintptr_t pDestination, size_t uSize) {

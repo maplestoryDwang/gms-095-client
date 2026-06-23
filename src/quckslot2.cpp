@@ -43,6 +43,12 @@ UCHAR QuickslotKeyMapDefault[] = {
         35, 0, 0, 0,
         36, 0, 0, 0,
 
+        37, 0, 0, 0,
+        38, 0, 0, 0,
+
+        21, 0, 0, 0,
+        22, 0, 0, 0,
+
 };
  
 // 26x4 = 104
@@ -82,6 +88,10 @@ UCHAR QuickslotKeyMap[] = {
         35, 0, 0, 0,
         36, 0, 0, 0,
 
+        37, 0, 0, 0,
+        38, 0, 0, 0,
+        21, 0, 0, 0,
+        22, 0, 0, 0,
 };
  
 UCHAR QuickslotKeyMapOld[] = {
@@ -119,7 +129,10 @@ UCHAR QuickslotKeyMapOld[] = {
         34, 0, 0, 0,
         35, 0, 0, 0,
         36, 0, 0, 0,
-
+        37, 0, 0, 0,
+        38, 0, 0, 0,
+        21, 0, 0, 0,
+        22, 0, 0, 0,
 };
  
 
@@ -142,6 +155,8 @@ UCHAR QuickSlotKeyPos[] = {
         180, 1, 0, 0, 15, 0, 0, 0, 
         213, 1, 0, 0, 15, 0, 0, 0, 
         246, 1, 0, 0, 15, 0, 0, 0, 
+        23, 2, 0, 0, 15, 0, 0, 0, 
+        56, 2, 0, 0, 15, 0, 0, 0, 
 
 
         7,   0, 0, 0, 48, 0, 0, 0,
@@ -160,7 +175,9 @@ UCHAR QuickSlotKeyPos[] = {
 
         180, 1, 0, 0, 48, 0, 0, 0,
         213, 1, 0, 0, 48, 0, 0, 0,
-        247, 1, 0, 0, 48, 0, 0, 0
+        247, 1, 0, 0, 48, 0, 0, 0,
+        23,  2, 0, 0, 48, 0, 0, 0,
+        56,  2, 0, 0, 48, 0, 0, 0
 
 
 
@@ -171,7 +188,9 @@ UCHAR QuickSlotKeyPos[] = {
 // 312/26 = 一个键位12个0
 // 312  138
 // 32键 384  180
-UCHAR FuncKeyMappedInfo[384] = {
+// 34键 408   198
+// 36键 432  1B0
+UCHAR FuncKeyMappedInfo[432] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -204,12 +223,18 @@ UCHAR FuncKeyMappedInfo[384] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
  
 // 104/26 = 4  每个slot4个0
 // 32x4 = 128
-UCHAR FuncKeyMappedSkillCooltime[128] = {
+// 34x4 = 136
+// 36x4 = 144
+UCHAR FuncKeyMappedSkillCooltime[144] = {
         255, 255, 255, 255,
         255, 255, 255, 255,
         255, 255, 255, 255,
@@ -237,6 +262,10 @@ UCHAR FuncKeyMappedSkillCooltime[128] = {
         255, 255, 255, 255,
         255, 255, 255, 255,
 
+        255, 255, 255, 255,
+        255, 255, 255, 255,
+        255, 255, 255, 255,
+        255, 255, 255, 255,
         255, 255, 255, 255,
         255, 255, 255, 255,
         255, 255, 255, 255,
@@ -248,7 +277,7 @@ UCHAR FuncKeyMappedSkillCooltime[128] = {
  
 // 312 / 26 = 12（）
 void resetFuncKeyMappedInfo() {
-    for (int i = 0; i < 384; ++i) {
+    for (int i = 0; i < 432; ++i) {
         FuncKeyMappedInfo[i] = 0;
     }
 }
@@ -284,7 +313,7 @@ _declspec(naked) void CompareValidateFuncKeyMappedInfo_cave()
 {
     _asm
     {
-        push 0x180   // 这里增加了  60h -> 138h  -> 180     funcKeylen 
+        push 0x1B0 // 这里增加了  60h -> 138h  -> 180     funcKeylen 
         push 0x0
         push ebx
         jmp CompareValidate_Retn
@@ -422,7 +451,7 @@ void _declspec(naked) IsQuickslotKeyMapModified_QKM_cc()         //判断是否修改
 {
     _asm {
         mov edx, QuickslotKeyMapAddr
-        mov eax, 128                        // 20h = 32 -》104 = 26X4   -》 32 X4 = 128 0x80
+        mov eax, 144                        // 20h = 32 -》104 = 26X4   -》 32 X4 = 128 0x80   34X4 = 136  /  36X4 = 144
         mov ecx, QuickslotKeyMapOldAddr
         jmp IsQuickslotKeyMapModified_QKM_cc_rtn
     }
@@ -677,7 +706,7 @@ void StatusBarClickRangeFunc() {
 
     if (curWidth > 800) {
         if (m_nChatWndType == 1) {
-            if (rx < 1420 && ry > 506) // 鼠标在状态栏    1321 + 33*3 = 1420
+            if (rx < 1486 && ry > 506) // 鼠标在状态栏    1321 + 33*3 = 1420
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
@@ -686,7 +715,7 @@ void StatusBarClickRangeFunc() {
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
-            if (rx < 1420 && ry > 506) // 鼠标在状态栏
+            if (rx < 1486 && ry > 506) // 鼠标在状态栏
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
@@ -738,7 +767,7 @@ void AttachQuickSlot() {
     //  void __thiscall CUIStatusBar::CUIStatusBar(CUIStatusBar *this)
     // ----------------------------------------------------------------------
     //Patch4(0x00876BFE + 1, 1320); // CUIStatusBar宽度扩充1024 -> 1320
-    Patch4(0x00876BFE + 1, 1419); // CUIStatusBar宽度扩充1024 -> 1320 + 3*33
+    Patch4(0x00876BFE + 1, 1518); // CUIStatusBar宽度扩充1024 -> 1320 + 3*33  + 33 1452
     // Patch4(0x0087B62A + 1, 312); // 800x600 quickslot位置 // 会移动整个框架
 
     // ----------------------------------------------------------------------
@@ -786,34 +815,34 @@ void AttachQuickSlot() {
     PatchJmp(0x008710EB, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_FKM_cc), 5);
     PatchJmp(0x008710F4, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_QKM_cc), 14);
     PatchJmp(0x00871064, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_FKM2_cc), 8);
-    Patch4(0x00871112 + 4, 32);        //  8-> 26         -》32                  
+    Patch4(0x00871112 + 4, 36);        //  8-> 26         -》32                  
     PatchJmp(CompareValidate_Hook_start, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_cave), 5);
 
     // CUIStatusBar::CQuickSlot::Draw
     PatchJmp(0x008761CA, reinterpret_cast<uintptr_t>(&Draw_QKM_cc), 10);
     PatchJmp(0x00875B67, reinterpret_cast<uintptr_t>(&Draw_FKM_cc), 10);
     PatchJmp(0x00875BAD, reinterpret_cast<uintptr_t>(&Draw_FKM2_cc), 7);
-    Patch1(0x0087639B + 2, 32);         //  8-> 26 ->32
+    Patch1(0x0087639B + 2, 36);         //  8-> 26 ->32
     Patch1(0x008762E4 + 2, 4); // 角标x
     Patch1(0x008762DA + 2, 4); // 角标y
 
     // CUIStatusBar::CQuickSlot::GetPosByIndex
     Patch4(0x0086CCA9 + 3, (DWORD)&QuickSlotKeyPos);
     Patch4(0x0086CCB6 + 3, (DWORD)&QuickSlotKeyPos + 4);
-    Patch1(0x0086CCA4 + 2, 32);  //  8-> 26
+    Patch1(0x0086CCA4 + 2, 36);  //  8-> 26
 
     // CUIStatusBar::GetShortCutIndexByPos
     Patch4(0x0086D06C + 3, (DWORD)&QuickSlotKeyPos);
     Patch4(0x0086D0A7 + 3, (DWORD)&QuickSlotKeyPos + 4);
     Patch4(0x0086D0E2 + 3, (DWORD)&QuickSlotKeyPos);
     Patch4(0x0086D11D + 3, (DWORD)&QuickSlotKeyPos + 4);
-    Patch1(0x0086D14A + 2, 32); //  8-> 26
+    Patch1(0x0086D14A + 2, 36); //  8-> 26
 
     // CDraggableMenu::OnDropped
-    Patch1(0x00509D71 + 2, 31);      // ShortCutIndexByPos <= 7 
+    Patch1(0x00509D71 + 2, 35);      // ShortCutIndexByPos <= 7 
 
     // CDraggableMenu::MapFuncKey
-    Patch1(0x00509AF9 + 2, 32);   // 8-> 26
+    Patch1(0x00509AF9 + 2, 36);   // 8-> 26
     PatchJmp(0x00509B75, reinterpret_cast<uintptr_t>(&CDraggableMenu_MapFuncKey_QKM_cc), 9);
     // CDraggableSkill::MapFuncKey
     PatchJmp(0x0050A43A, reinterpret_cast<uintptr_t>(&CDraggableSkill_MapFuncKey_QKM_cc), 9);
@@ -826,7 +855,7 @@ void AttachQuickSlot() {
     // CUIStatusBar::CQuickSlot::DrawSkillCooltime
     // PatchJmp(0x0086FFF2, reinterpret_cast<uintptr_t>(&DrawSkillCooltime_FKM_cc), 6); // 下面已覆盖
     PatchJmp(0x0086FFEF, reinterpret_cast<uintptr_t>(&DrawSkillCooltime_SCT_cc), 9);
-    Patch1(0x0087035E + 2, 32);  // 8-> 26
+    Patch1(0x0087035E + 2, 36);  // 8-> 26
 
     // CQuickslotKeyMappedMan::DefaultQuickslotKeyMap
     PatchJmp(0x006C5FF2, reinterpret_cast<uintptr_t>(&DefaultQuickslotKeyMap_cc), 15);

@@ -361,6 +361,9 @@ _declspec(naked) void ResetFKMInfo()
     .text:0087108D 6A 00                             push    0               ; value
     .text:0087108F 53                                push    ebx             ; dst
     .text:00871090 E8 EB F1 1B 00                    call    _memset
+
+    60 = 96 = 8*12
+   CUIStatusBar::CQuickSlot::CompareValidateFuncKeyMappedInfo
  */
 DWORD CompareValidate_Hook_start = 0x0087108B;
 DWORD CompareValidate_Retn = 0x00871090;
@@ -496,7 +499,7 @@ void _declspec(naked) CQuickslotKeyMappedMan_OnInit_Copy_cc()
 /*
 .text:007D8200 8D 51 04                          lea     edx, [this+4]
 .text:007D8203 B8 20 00 00 00                    mov     eax, 20h ; ' '
-.text:007D8208 83 C1 24                          add     this, 24h ; '$'
+.text:007D8208 83 C1 24                          add     ecx, 24h ; '$'
 .text:007D820B 56                                push    esi
 */
 DWORD QuickslotKeyMapOldAddr = (DWORD)&QuickslotKeyMapOld;
@@ -507,7 +510,7 @@ void _declspec(naked) IsQuickslotKeyMapModified_QKM_cc()         //判断是否修改
     _asm {
         mov edx, QuickslotKeyMapAddr
         mov eax, 168                        // 20h = 32 -》104 = 26X4   -》 32 X4 = 128 0x80   34X4 = 136  /  36X4 = 144   / 42X4 = 168
-        mov ecx, QuickslotKeyMapOldAddr
+        mov ecx, QuickslotKeyMapOldAddr     // 拿到旧的地址
         jmp IsQuickslotKeyMapModified_QKM_cc_rtn
     }
 }
@@ -553,7 +556,7 @@ void _declspec(naked) CompareValidateFuncKeyMappedInfo_FKM_cc()
     _asm {
         lea ebx, FuncKeyMappedInfo  //自己的放到EBX？
         mov eax, [0x00C6AAE4]   //.data:00C6AAE4 ?? ?? ?? ??       ?ms_pInstance@?$TSingleton@VCFuncKeyMappedMan@@@@1PAVCFuncKeyMappedMan@@A dd ?
-        mov eax, [eax]
+        mov eax, [eax]          // 感觉是一样的？
         jmp CompareValidateFuncKeyMappedInfo_FKM_cc_rtn
     }
 }
@@ -571,7 +574,7 @@ DWORD CompareValidateFuncKeyMappedInfo_QKM_cc_rtn = 0x00871102;
 void _declspec(naked) CompareValidateFuncKeyMappedInfo_QKM_cc()
 {
     _asm {
-        mov eax, QuickslotKeyMapAddr
+        mov eax, QuickslotKeyMapAddr   //eax 一开始是结构体地址 + 4 就变成quickslot的地址。
         //add ebx, 0x94
         jmp CompareValidateFuncKeyMappedInfo_QKM_cc_rtn
     }
@@ -581,6 +584,7 @@ void _declspec(naked) CompareValidateFuncKeyMappedInfo_QKM_cc()
 .text:00871064 81 C3 94 00 00 00                 add     ebx, 94h
 .text:0087106A 8B CB                             mov     ecx, ebx
 .text:0087106C 8D 64 24 00                       lea     esp, [esp+0]
+// 
 v6 = this->m_aFuncKeyMappedInfo;
 */
 DWORD CompareValidateFuncKeyMappedInfo_FKM2_cc_hook = 0x00871064;
@@ -593,6 +597,11 @@ void _declspec(naked) CompareValidateFuncKeyMappedInfo_FKM2_cc()
     }
 }
  
+/*
+.text:008761CA 8B 0D E8 AB C6 00                       mov     ecx, ?ms_pInstance@?$TSingleton@VCQuickslotKeyMappedMan@@@@1PAVCQuickslotKeyMappedMan@@A ; CQuickslotKeyMappedMan * TSingleton<CQuickslotKeyMappedMan>::ms_pInstance
+.text:008761D0 8B 4C 99 04                             mov     this, [ecx+ebx*4+4]
+.text:008761D4 8B 00                                   mov     eax, [eax]
+*/
 DWORD Draw_QKM_cc_rtn = 0x008761D4;
 void _declspec(naked) Draw_QKM_cc()
 {
@@ -603,17 +612,30 @@ void _declspec(naked) Draw_QKM_cc()
     }
 }
  
-DWORD FuncKeyMappedInfoAddr = (DWORD)&FuncKeyMappedInfoAddr;
+//DWORD FuncKeyMappedInfoAddr = (DWORD)&FuncKeyMappedInfoAddr;
+// 0x00875B67
+/*
+.text:00875B67 8A 84 8A 94 00 00 00                    mov     al, [edx+this*4+94h]
+.text:00875B6E 8D 3C 8A                                lea     edi, [edx+this*4]
+.text:00875B71 84 C0                                   test    al, al
+*/
+DWORD Draw_FKM_cc_hook = 0x00875B67;
 DWORD Draw_FKM_cc_rtn = 0x00875B71;
 void _declspec(naked) Draw_FKM_cc()
 {
     _asm {
         mov al,  [FuncKeyMappedInfo + ecx * 4]
-        lea edi, [FuncKeyMappedInfo + ecx * 4 - 0x94] //  00875B9B会用到
+        lea edi, [FuncKeyMappedInfo + ecx * 4 - 0x94] //  00875B9B会用到  funkey总有个0x94的偏移
         jmp Draw_FKM_cc_rtn
     }
 }
  
+/*
+.text:00875BAD 8D 44 40 27                             lea     eax, [eax+eax*2+27h]
+.text:00875BB1 8B 1C 81                                mov     ebx, [this+eax*4]
+.text:00875BB4 8B 45 58                                mov     eax, [ebp+70h+x]
+*/
+DWORD Draw_FKM2_cc_hook = 0x00875BAD;
 DWORD Draw_FKM2_cc_rtn = 0x00875BB4;
 void _declspec(naked) Draw_FKM2_cc()
 {
@@ -668,11 +690,17 @@ void _declspec(naked) DefaultQuickslotKeyMap_cc()
     }
 }
  
+/*
+.text:00509B75 8B 4C 24 14                             mov     this, [esp+18h+pQkmMan]
+.text:00509B79 8B 44 99 04                             mov     eax, [this+ebx*4+4]
+.text:00509B7D 50                                      push    eax             ; nIdx
+.text:00509B7E 8B CD                                   mov     this, ebp       ; this
+*/
 DWORD CDraggableMenu_MapFuncKey_QKM_cc_rtn = 0x00509B7E;
 void _declspec(naked) CDraggableMenu_MapFuncKey_QKM_cc()
 {
     _asm {
-        lea eax, [QuickslotKeyMap + ebx * 4]
+        lea eax, [QuickslotKeyMap + ebx * 4]           // QuickslotKeyMap的地址就是结构体 + 4的偏移量，开头是虚函数表
         mov eax, [eax]
         push eax
         jmp CDraggableMenu_MapFuncKey_QKM_cc_rtn
@@ -701,12 +729,18 @@ void _declspec(naked) CDraggableItem_MapFuncKey_QKM_cc()
     }
 }
  
+/*
+.text:00876C8A 8B 15 E8 AB C6 00                       mov     edx, ?ms_pInstance@?$TSingleton@VCQuickslotKeyMappedMan@@@@1PAVCQuickslotKeyMappedMan@@A ; CQuickslotKeyMappedMan * TSingleton<CQuickslotKeyMappedMan>::ms_pInstance
+.text:00876C90 8B 44 82 04                             mov     eax, [edx+eax*4+4]
+.text:00876C94 8B 0D E4 AA C6 00                       mov     this, ?ms_pInstance@?$TSingleton@VCFuncKeyMappedMan@@@@1PAVCFuncKeyMappedMan@@A ; this
+*/
+DWORD TryBeginDragFuncKeyMappedIcon_QKM_cc_hook = 0x00876C8A;
 DWORD TryBeginDragFuncKeyMappedIcon_QKM_cc_rtn = 0x00876C94;
 void _declspec(naked) TryBeginDragFuncKeyMappedIcon_QKM_cc()
 {
     _asm {
         mov edx, QuickslotKeyMapAddr
-        mov eax, [edx + eax * 4]
+        mov eax, [edx + eax * 4]                       // 这里又去掉了+4的偏移量
         jmp TryBeginDragFuncKeyMappedIcon_QKM_cc_rtn
     }
 }
@@ -726,9 +760,11 @@ void _declspec(naked) OnMouseMove_cc()
  
  
 DWORD QuickSlotIsEnableFunc = 0x0086D2F0;
+DWORD StatusBarClickRange_Rtn_Hook = 0x0086D582;  //hook开始的地方
 DWORD StatusBarClickRange_Rtn_INT = 0x0086D62F;
-DWORD StatusBarClickRange_Rtn_ZERO = 0x0086D626;
+DWORD StatusBarClickRange_Rtn_ZERO = 0x0086D626;  // hook结束
 DWORD StatusBarClickRange_Rtn;  // 返回值
+// hook长度 164 = 626-582 
 
 void StatusBarClickRangeFunc() {
     int m_nChatWndType;   // 聊天窗状态 1=隐藏 3=显示
@@ -738,19 +774,30 @@ void StatusBarClickRangeFunc() {
     int m_bDragChatWnd;   // 是否拖拽状态
     int quickSlotIsEnabled;
 
+    // 获取当时内存和寄存器中的参数
     _asm {
         push eax
+        // this->m_nChatWndType != 1 
         mov  eax, [esi + 1804h]
         mov  m_nChatWndType, eax
+
+        //  m_nChatWndHeight = this->m_nChatWndHeight;
         mov  eax, [esi + 1800h]
         mov  m_nChatWndHeight, eax
+
+        // .text:0086D582 81 FF 41 02 00 00                       cmp     edi, 241h
+        // rx >= 577
         mov  rx, edi
         mov  ry, ebx
+
+        //  this->m_bDragChatWnd
         mov  eax, [esi + 1618h]
         mov  m_bDragChatWnd, eax
-        lea  ecx, [esi + 1824h]
+
+        // this->m_QuickSlot
+        lea  ecx, [esi + 1824h]  // 给CUIStatusBar::CQuickSlot *this 给ecx
         call QuickSlotIsEnableFunc
-        mov  quickSlotIsEnabled, eax
+        mov  quickSlotIsEnabled, eax //获取是否可以
         pop  eax
     }
 
@@ -760,8 +807,8 @@ void StatusBarClickRangeFunc() {
     int curWidth = CWvsContext::GetInstance()->m_nScreenWidth;
 
     if (curWidth > 800) {
-        if (m_nChatWndType == 1) {
-            if (rx < 1585 && ry > 506) // 鼠标在状态栏    1321 + 33*3 = 1420/16   1486是 18 1486 + 33*3=1585
+        if (m_nChatWndType == 1) {  // 原来x 489 y 506
+            if (rx < 1585 && ry > 506) // 鼠标在状态栏    1321 + 33*3 = 1420/16  | 1486是18键 | 1486 + 33*3=1585（21键时）
             {
                 StatusBarClickRange_Rtn = StatusBarClickRange_Rtn_INT;
             }
@@ -822,12 +869,14 @@ void AttachQuickSlot() {
     //  void __thiscall CUIStatusBar::CUIStatusBar(CUIStatusBar *this)
     // ----------------------------------------------------------------------
     //Patch4(0x00876BFE + 1, 1320); // CUIStatusBar宽度扩充1024 -> 1320
+    // 
+    // 目的是调用CWnd::CreateWnd 创建CUIStatusBar
     Patch4(0x00876BFE + 1, 1617); // CUIStatusBar宽度扩充1024 -> 1320 + 3*33  + 33 1452/16  1518/18 + 99 = 1617/21键
     // Patch4(0x0087B62A + 1, 312); // 800x600 quickslot位置 // 会移动整个框架
 
     // ----------------------------------------------------------------------
     // CUIStatusBar::CQuickSlot::Init
-    // 修改按钮的位置
+    // 修改按钮的位置 86没有跳过
     // ----------------------------------------------------------------------
     PatchJmp(0x00875406, reinterpret_cast<uintptr_t>(&QuickSlotBtOpenCc), 9);  // CUIStatusBar::CQuickSlot::Init
     PatchJmp(0x00875475, reinterpret_cast<uintptr_t>(&QuickSlotBtCloseCc), 9); // CUIStatusBar::CQuickSlot::Init
@@ -836,6 +885,7 @@ void AttachQuickSlot() {
 
     // ----------------------------------------------------------------------
     // CUIStatusBar::HitTest
+    // 86hook了没效果跳过
     // ----------------------------------------------------------------------
     // Patch4(0x0086D582 + 2, 368);// 可按区域 针对800x600 由下面替代了
     // Patch4(0x0086D5BA + 2, 91);// 可按区域 针对800x600 由下面替代了
@@ -854,12 +904,15 @@ void AttachQuickSlot() {
     // ----------------------------------------------------------------------
     // 服务端发的true,不会走0x006C6144
     // PatchJmp(0x006C6144, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_OnInit_QKM_cc)); // 接收服务端发来的请求 会重写覆盖本地的数组 // 配合上面的发送请求理论上可以让用户自定义快捷键布局
-    // 和发给服务端一样也是QuickslotKeyMapper 复制到 oldQuickslotKeyMapper
+    // 和发给服务端一样
+    // QuickslotKeyMapper 复制到 oldQuickslotKeyMapper
     PatchJmp(0x006C6169, reinterpret_cast<uintptr_t>(&CQuickslotKeyMappedMan_OnInit_Copy_cc), 13);
 
 
     // CQuickslotKeyMappedMan::IsQuickslotKeyMapModified 是否修改
+    // 有个确定按钮问 要不要修改
     PatchJmp(0x007D8200, reinterpret_cast<uintptr_t>(&IsQuickslotKeyMapModified_QKM_cc), 11);
+
 
     // CUIKeyConfig::~CUIKeyConfig
     // 旧的复制给新的
@@ -870,8 +923,8 @@ void AttachQuickSlot() {
     PatchJmp(0x008710EB, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_FKM_cc), 5);
     PatchJmp(0x008710F4, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_QKM_cc), 14);
     PatchJmp(0x00871064, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_FKM2_cc), 8);
-    Patch4(0x00871112 + 4, 42);        //  8-> 26         -》32                  
-    PatchJmp(CompareValidate_Hook_start, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_cave), 5);
+    Patch4(0x00871112 + 4, 42);        //  8-> 26         -》32                                   // keynum         
+    PatchJmp(0x0087108B, reinterpret_cast<uintptr_t>(&CompareValidateFuncKeyMappedInfo_cave), 5); // funkey len
 
     // CUIStatusBar::CQuickSlot::Draw
     PatchJmp(0x008761CA, reinterpret_cast<uintptr_t>(&Draw_QKM_cc), 10);
@@ -896,6 +949,7 @@ void AttachQuickSlot() {
     // CDraggableMenu::OnDropped
     Patch1(0x00509D71 + 2, 41);      // ShortCutIndexByPos <= 7 
 
+    // 三种可拖动的
     // CDraggableMenu::MapFuncKey
     Patch1(0x00509AF9 + 2, 42);   // 8-> 26
     PatchJmp(0x00509B75, reinterpret_cast<uintptr_t>(&CDraggableMenu_MapFuncKey_QKM_cc), 9);
@@ -922,6 +976,7 @@ void AttachQuickSlot() {
     PatchJmp(0x0087ACBE, reinterpret_cast<uintptr_t>(&OnMouseMove_cc), 13);
 
     // CQuickSlot::~CQuickSlot
+    // 全部重置
     // 汇编代码（ResetFKMInfo）并没有塞进游戏的那个 6 字节漏洞里。它存放在内存中的另一个全新地方。那 6 个字节里只放了一条去往那个新地方的“路标”（jmp 指令）。
     // 在 x86 汇编中，一条标准的长跳转指令 jmp <相对地址> 的机器码是 E9 XX XX XX XX，它固定占用 5 个字节。
     PatchJmp(0x0086FB19, reinterpret_cast<uintptr_t>(&ResetFKMInfo), 6);
